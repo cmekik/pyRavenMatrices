@@ -1,0 +1,43 @@
+<?xml version="1.0" ?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0" 
+  ns="https://github.com/cmekik/XML-matrix-problem-generator/problem-structure" 
+  datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+  <start>
+    <element name="matrix-problem">
+      <ref name="fundament"/>
+      <ref name="diagonal"/>
+      <ref name="alternatives"/>
+    </element>
+  </start>
+  <define name="fundament">
+    <element name="fundament">
+      <data type="anyURI"/>
+    </element>
+  </define>
+  <define name="diagonal">
+    <element name="diagonal">
+      <oneOrMore>
+        <element name="cell">
+          <element name="row">
+            <data type="anyURI"/>
+          </element>
+          <element name="col">
+            <data type="anyURI"/>
+          </element>
+        </element>
+      </oneOrMore>
+    </element>
+  </define>
+  <define name="alternatives">
+    <element name="alternatives">
+      <oneOrMore>
+        <element name="alt">
+          <choice>
+            <data type="anyURI"/>
+            <empty/>
+          </choice>
+        </element>
+      </oneOrMore>
+    </element>
+  </define>
+</grammar>
