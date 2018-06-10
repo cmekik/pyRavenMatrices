@@ -1,0 +1,238 @@
+<grammar 
+  xmlns="http://relaxng.org/ns/structure/1.0"
+  ns="http://www.w3.org/2000/svg" 
+  datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+  <define name="PathData.datatype">
+    <data type="string"/>
+  </define>
+  <define name="TransformList.datatype">
+    <data type="string"/>
+  </define>
+  <define name="Paint.datatype">
+    <data type="string"/>
+  </define>
+  <define name="Length.datatype">
+    <data type="string"/>
+  </define>
+  <define name="Lengths.datatype">
+    <data type="string"/>
+  </define>
+  <define name="Number.datatype">
+    <data type="string"/>
+  </define>
+  <define name="SVGColor.datatype">
+    <data type="string"/>
+  </define>
+  <define name="NCName.datatype">
+    <data type="NCName"/>
+  </define>
+  <define name="Coordinate.datatype">
+    <data type="string"/>
+  </define>
+  <define name="SVG.PreserveAspectRatioSpec.datatype">
+    <data name="string"/>
+  </define>
+  <define name="svg.ID.attr">
+    <choice>
+      <attribute name="id">
+        <ref name="NCName.datatype"/>
+      </attribute>
+      <attribute name="xml:id">
+        <ref name="NCName.datatype"/>
+      </attribute>
+    </choice>
+  </define>
+  <define name="svg.Properties.attr" combine="interleave">
+    <optional>
+      <attribute name="fill">
+        <choice>
+          <value>inherit</value>
+          <ref name="Paint.datatype"/>
+        </choice>
+      </attribute>
+    </optional>
+    <optional>
+      <attribute name="fill-rule">
+        <choice>
+          <value>inherit</value>
+          <value>nonzero</value>
+          <value>evenodd</value>
+        </choice>
+      </attribute>
+    </optional>
+    <optional>
+      <attribute name="stroke">
+        <choice>
+          <value>inherit</value>
+          <ref name="Paint.datatype"/>
+        </choice>
+      </attribute>
+    </optional>
+    <optional>
+      <attribute name="stroke-dasharray">
+        <choice>
+          <value>inherit</value>
+          <value>none</value>
+          <ref name="Lengths.datatype"/>
+        </choice>
+      </attribute>
+    </optional>
+    <optional>
+      <attribute name="stroke-dashoffset">
+        <choice>
+          <value>inherit</value>
+          <ref name="Length.datatype"/>
+        </choice>
+      </attribute>
+    </optional>
+    <optional>
+      <attribute name="stroke-linecap">
+        <choice>
+          <value>butt</value>
+          <value>round</value>
+          <value>square</value>
+          <value>inherit</value>
+        </choice>
+      </attribute>
+    </optional>
+    <optional>
+      <attribute name="stroke-linejoin">
+        <choice>
+          <value>miter</value>
+          <value>round</value>
+          <value>bevel</value>
+          <value>inherit</value>
+        </choice>
+      </attribute>
+    </optional>
+    <optional>
+      <attribute name="stroke-miterlimit">
+        <choice>
+          <value>inherit</value>
+          <ref name="Number.datatype"/>
+        </choice>
+      </attribute>
+    </optional>
+    <optional>
+      <attribute name="stroke-width">
+        <choice>
+          <value>inherit</value>
+          <ref name="Length.datatype"/>
+        </choice>
+      </attribute>
+    </optional>
+    <optional>
+      <attribute name="color">
+        <choice>
+          <value>inherit</value>
+          <ref name="SVGColor.datatype"/>
+        </choice>
+      </attribute>
+    </optional>
+  </define>
+  <define name="svg.Transform.attr" combine="interleave">
+    <optional>
+      <attribute name="transform">
+        <choice>
+          <ref name="TransformList.datatype"/>
+          <value>none</value>
+        </choice>
+      </attribute>
+    </optional>
+  </define>
+  <define name="svg.Pattern.attr">
+    <optional>
+      <attribute name="x">
+        <ref name="SVG.Coordinate.datatype"/>
+      </attribute>
+    </optional>
+    <optional>
+      <attribute name="y">
+        <ref name="SVG.Coordinate.datatype"/>
+      </attribute>
+    </optional>
+    <optional>
+      <attribute name="width">
+        <ref name="SVG.Length.datatype"/>
+      </attribute>
+    </optional>
+    <optional>
+      <attribute name="height">
+        <ref name="SVG.Length.datatype"/>
+      </attribute>
+    </optional>
+    <optional>
+      <attribute name="patternUnits">
+        <choice>
+          <value>userSpaceOnUse</value>
+          <value>objectBoundingBox</value>
+        </choice>
+      </attribute>
+    </optional>
+    <optional>
+      <attribute name="patternContentUnits">
+        <choice>
+          <value>userSpaceOnUse</value>
+          <value>objectBoundingBox</value>
+        </choice>
+      </attribute>
+    </optional>
+    <optional>
+      <attribute name="patternTransform">
+        <ref name="SVG.TransformList.datatype"/>
+      </attribute>
+    </optional>
+    <optional>
+      <attribute name="preserveAspectRatio">
+        <ref name="SVG.PreserveAspectRatioSpec.datatype"/>
+      </attribute>
+    </optional>
+  </define>
+  <define name="svg.SVG.attr">
+    <attribute name="width">
+      <ref name="SVG.Length.datatype"/>
+    </attribute>
+    <attribute name="height">
+      <ref name="SVG.Length.datatype"/>
+    </attribute>
+  </define>
+  <define name="path">
+    <element name="path">
+      <optional>
+        <ref name="svg.ID.attr"/>
+      </optional>
+      <attribute name="d">
+        <ref name="PathData.datatype"/>
+      </attribute>
+      <ref name="svg.Transform.attr"/>
+      <ref name="svg.Properties.attr"/>
+    </element>
+  </define>
+  <define name="pattern">
+    <element name="pattern">
+      <ref name="svg.ID.attr"/>
+      <ref name="svg.Pattern.attr"/>
+      <oneOrMore>
+        <ref name="path"/>
+      </oneOrMore>
+    </element>
+  </define>
+  <define name="defs">
+    <element name="defs">
+      <zeroOrMore>
+        <ref name="pattern"/>
+      </zeroOrMore>
+    </element>
+  </define>
+  <start>
+    <element name="svg">
+      <ref name="svg.SVG.attr">
+      <optional>
+        <ref name="defs"/>
+      </optional>
+      <oneOrMore>
+        <ref name="path"/>
+      </oneOrMore>
+    </element>
+  </start>
+</grammar>
