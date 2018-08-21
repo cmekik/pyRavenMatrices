@@ -29,17 +29,18 @@ Transformations vs. Modifiers
 
 There are, so to speak, two levels at which we can talk about *figure 
 transformations* and it is worth explicitly disambiguating them. 
-+Transformations* as understood in the Raven's Matrices specification, are 
-patterns that define how figures differ between matrix rows and columns. Then, 
-there are *modifiers* (`element_modifier` in syntax), which are specific to the 
-present representational scheme and serve to define one figural element in 
-terms of other more basic elements.
+*Transformations* as understood in the Raven's Matrices specification, are 
+patterns that define how figures differ between matrix rows and columns. 
+*Modifiers* (`element_modifier` in syntax) are specific to the representational 
+scheme used in this package and serve to define one figural element in terms of 
+other more basic elements.
 
 The key difference between transformations and modifiers is that 
 **transformations alter the structure of elements**, whereas **modifiers alter 
 the way an element is drawn**. Thus, transformations are a higher level concept 
-in this scheme than modifiers. Notably, transformations may add or remove 
-modifiers from figures, as well as add or remove elements from figures.
+in this scheme than modifiers: transformations may add modifiers to or remove 
+modifiers from figures in addition to having other effects such as addition of 
+elements to or removal of elements from figures.
 
 Strictly speaking, transformations are not part of the description of a figure, 
 thus they are not defined in this module.
@@ -70,6 +71,20 @@ class ElementModifier(abc.ABC):
     '''Represents an alteration of the drawing procedure for a given element.
     '''
     
+    def __eq__(self, other : Any) -> bool:
+        '''Return `True` if `other` is equal to `self`.
+        
+        `self == other` iff:
+
+        - `type(self) == type(other)` and
+        - `vars(self) == vars(other)` 
+        '''
+
+        return (
+            type(self) == type(other) and
+            vars(self) == vars(other)
+        )
+
     @abc.abstractmethod
     def __call__(
         self, element : Callable[[cairo.Context], None]
@@ -83,7 +98,7 @@ class ElementModifier(abc.ABC):
         '''
         pass
 
-    
+
 class BasicElement(Element):
     '''An unanalyzed figural unit.
     
@@ -91,7 +106,19 @@ class BasicElement(Element):
     instantiated. 
     '''
     
-    pass
+    def __eq__(self, other : Any) -> bool:
+        '''Return `True` if `other` is equal to `self`.
+        
+        `self == other` iff:
+
+        - `type(self) == type(other)` and
+        - `vars(self) == vars(other)` 
+        '''
+
+        return (
+            type(self) == type(other) and
+            vars(self) == vars(other)
+        )
     
     
 class ModifiedElement(Element):
@@ -110,12 +137,13 @@ class ModifiedElement(Element):
         self._modifiers.extend(modifiers)
 
     def __eq__(self, other : Any) -> bool:
-        '''Return True if other is equal to self.
+        '''Return `True` if `other` is equal to `self`.
         
-        self == other iff:
-            other is a ModifiedElement instance and
-            self.element == other.element and
-            self.modifiers == other.modifiers 
+        `self == other` iff:
+
+        - `other` is a `ModifiedElement` instance and
+        - `self.element == other.element` and
+        - `self.modifiers == other.modifiers` 
         '''
 
         return (
@@ -135,12 +163,12 @@ class ModifiedElement(Element):
 
     @property
     def element(self) -> Element:
-        '''The base element of self.'''
+        '''The base element of `self`.'''
         return self._element
 
     @property
     def modifiers(self) -> List[ElementModifier]:
-        '''The sequence of modifiers applied to base element of self.'''
+        '''The sequence of modifiers applied to base element of `self`.'''
         return self._modifiers 
         
     
@@ -157,9 +185,10 @@ class CompositeElement(Element):
     def __eq__(self, other : Any) -> bool:
         '''Return True if other is equal to self.
         
-        self == other iff:
-            other is a CompositeElement instance and
-            self.elements == other.elements  
+        `self == other` iff:
+
+        - `other` is a `CompositeElement` instance and
+        - `self.elements == other.elements`  
         '''
 
         return (
@@ -174,5 +203,5 @@ class CompositeElement(Element):
 
     @property
     def elements(self) -> List[Element]:
-        '''Sub-elements of self.'''
+        '''Sub-elements of `self`.'''
         return self._elements
