@@ -132,9 +132,9 @@ class ModifiedElement(Element):
         *modifiers : ElementModifier
     ) -> None:
         
-        self._element = element
-        self._modifiers = [modifier]
-        self._modifiers.extend(modifiers)
+        self.element = element
+        self.modifiers = [modifier]
+        self.modifiers.extend(modifiers)
 
     def __eq__(self, other : Any) -> bool:
         '''Return `True` if `other` is equal to `self`.
@@ -161,16 +161,6 @@ class ModifiedElement(Element):
             modified = modifier(modified)
         modified(ctx)
 
-    @property
-    def element(self) -> Element:
-        '''The base element of `self`.'''
-        return self._element
-
-    @property
-    def modifiers(self) -> List[ElementModifier]:
-        '''The sequence of modifiers applied to base element of `self`.'''
-        return self._modifiers 
-        
     
 class CompositeElement(Element):
     '''Represents a sequence of overlayed elements.'''
@@ -179,8 +169,8 @@ class CompositeElement(Element):
         self, element_1 : Element, element_2 : Element, *elements : Element
     ) -> None:
         
-        self._elements = [element_1, element_2]
-        self._elements.extend(elements)
+        self.elements = [element_1, element_2]
+        self.elements.extend(elements)
 
     def __eq__(self, other : Any) -> bool:
         '''Return True if other is equal to self.
@@ -200,30 +190,3 @@ class CompositeElement(Element):
 
         for element in self.elements:
             element.draw_in_context(ctx)
-
-    @property
-    def elements(self) -> List[Element]:
-        '''Sub-elements of `self`.'''
-        return self._elements
-
-
-def get_subtrees(element : Element) -> List[Union[Element, ElementModifier]]:
-    '''Return a list of all unique subelements of element.'''
-    
-    output : List[Union[Element, ElementModifier]] = [element]
-    for sub in output:
-        if isinstance(sub, BasicElement) or isinstance(sub, ElementModifier):
-            continue
-        elif isinstance(sub, ModifiedElement):
-            if not sub.element in output:
-                output.append(sub.element)
-            for mod in sub.modifiers:
-                if not mod in output:
-                    output.append(mod)
-        elif isinstance(sub, CompositeElement):
-            for subsub in sub.elements:
-                if not subsub in output:
-                    output.append(subsub)
-        else:
-            raise TypeError('Unexpected type {}'.format(str(type(sub))))
-    return output
