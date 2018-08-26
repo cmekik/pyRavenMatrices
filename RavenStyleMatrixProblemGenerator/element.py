@@ -48,7 +48,7 @@ thus they are not defined in this module.
 
 
 import abc
-from typing import Callable, List, Any
+from typing import Callable, List, Any, Union
 import cairo
 
 
@@ -205,3 +205,25 @@ class CompositeElement(Element):
     def elements(self) -> List[Element]:
         '''Sub-elements of `self`.'''
         return self._elements
+
+
+def get_subtrees(element : Element) -> List[Union[Element, ElementModifier]]:
+    '''Return a list of all unique subelements of element.'''
+    
+    output : List[Union[Element, ElementModifier]] = [element]
+    for sub in output:
+        if isinstance(sub, BasicElement) or isinstance(sub, ElementModifier):
+            continue
+        elif isinstance(sub, ModifiedElement):
+            if not sub.element in output:
+                output.append(sub.element)
+            for mod in sub.modifiers:
+                if not mod in output:
+                    output.append(mod)
+        elif isinstance(sub, CompositeElement):
+            for subsub in sub.elements:
+                if not subsub in output:
+                    output.append(subsub)
+        else:
+            raise TypeError('Unexpected type {}'.format(str(type(sub))))
+    return output
