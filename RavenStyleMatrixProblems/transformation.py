@@ -18,10 +18,6 @@ the way an element is drawn**. Thus, transformations are a higher level concept
 in this scheme than modifiers: transformations may add modifiers to or remove 
 modifiers from figures in addition to having other effects such as addition of 
 elements to or removal of elements from figures.
-
-Strictly speaking, transformations are not part of the description of a figure, 
-thus they are not defined in this module.
-
 '''
 
 import copy
