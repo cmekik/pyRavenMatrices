@@ -52,12 +52,33 @@ from typing import Callable, List, Any, Union
 import cairo
 
 
-class Element(abc.ABC):
+class ElementNode(abc.ABC):
+
+    def __repr__(self):
+
+        return ''.join(repr(type(self)), '(', repr(vars(self)), ')')
+
+    def __eq__(self, other : Any) -> bool:
+        '''Return ``True`` if ``other`` is equal to ``self``.
+        
+        ``self == other`` iff:
+
+        - ``type(self) == type(other)`` and
+        - ``vars(self) == vars(other)`` 
+        '''
+
+        return (
+            type(self) == type(other) and
+            vars(self) == vars(other)
+        )
+
+
+class Element(ElementNode):
     '''Represents an identifiable figure segment.
 
-    `Element` is an abstract base class. It cannot be directly instantiated.
+    ``Element`` is an abstract base class. It cannot be directly instantiated.
     '''
-    
+
     @abc.abstractmethod
     def draw_in_context(self, ctx : cairo.Context) -> None:
         '''Draw self in the given context.
@@ -67,31 +88,17 @@ class Element(abc.ABC):
         pass
 
     
-class ElementModifier(abc.ABC):
+class ElementModifier(ElementNode):
     '''Represents an alteration of the drawing procedure for a given element.
     '''
     
-    def __eq__(self, other : Any) -> bool:
-        '''Return `True` if `other` is equal to `self`.
-        
-        `self == other` iff:
-
-        - `type(self) == type(other)` and
-        - `vars(self) == vars(other)` 
-        '''
-
-        return (
-            type(self) == type(other) and
-            vars(self) == vars(other)
-        )
-
     @abc.abstractmethod
     def __call__(
         self, element : Callable[[cairo.Context], None]
     ) -> Callable[[cairo.Context], None]:
-        '''Modify `element.draw_in_context` and return result.
+        '''Modify ``element.draw_in_context`` and return result.
         
-        Should return a wrapper of `element.draw_in_context` implementing the 
+        Should return a wrapper of ``element.draw_in_context`` implementing the 
         desired modification.
 
         :param element: An element whose draw routine is to be modified by self.
@@ -102,23 +109,23 @@ class ElementModifier(abc.ABC):
 class BasicElement(Element):
     '''An unanalyzed figural unit.
     
-    `BasicElement` is an abstract base class. It cannot be directly 
+    ``BasicElement`` is an abstract base class. It cannot be directly 
     instantiated. 
     '''
-    
-    def __eq__(self, other : Any) -> bool:
-        '''Return `True` if `other` is equal to `self`.
+    pass
+
+
+class EmptyElement(BasicElement):
+    '''Represents an empty element.
+    '''
+
+    def __bool__(self):
+        '''Always evaluates to ``False``.'''
         
-        `self == other` iff:
-
-        - `type(self) == type(other)` and
-        - `vars(self) == vars(other)` 
-        '''
-
-        return (
-            type(self) == type(other) and
-            vars(self) == vars(other)
-        )
+        return False
+    
+    def draw_in_context(self, ctx):
+        pass
     
     
 class ModifiedElement(Element):
@@ -135,22 +142,6 @@ class ModifiedElement(Element):
         self.element = element
         self.modifiers = [modifier]
         self.modifiers.extend(modifiers)
-
-    def __eq__(self, other : Any) -> bool:
-        '''Return `True` if `other` is equal to `self`.
-        
-        `self == other` iff:
-
-        - `other` is a `ModifiedElement` instance and
-        - `self.element == other.element` and
-        - `self.modifiers == other.modifiers` 
-        '''
-
-        return (
-            isinstance(other, ModifiedElement) and
-            self.element == other.element and
-            self.modifiers == other.modifiers
-        )
     
     def draw_in_context(self, ctx : cairo.Context):
         
@@ -171,20 +162,6 @@ class CompositeElement(Element):
         
         self.elements = [element_1, element_2]
         self.elements.extend(elements)
-
-    def __eq__(self, other : Any) -> bool:
-        '''Return True if other is equal to self.
-        
-        `self == other` iff:
-
-        - `other` is a `CompositeElement` instance and
-        - `self.elements == other.elements`  
-        '''
-
-        return (
-            isinstance(other, CompositeElement) and 
-            self.elements == other.elements
-        )
         
     def draw_in_context(self, ctx : cairo.Context) -> None:
 
