@@ -25,7 +25,10 @@ thus they are not defined in this module.
 '''
 
 import copy
+from typing import Callable, Any
 from element import (
+    ElementNode,
+    Element,
     ElementModifier, 
     BasicElement, 
     EmptyElement, 
@@ -64,9 +67,18 @@ class Transformation(object):
         return output
 
 
-def transform(element, op, loc, *args, **kwargs):
+def transform(
+    element : Element, 
+    op : Callable[..., Element], 
+    loc : ElementNode, 
+    *args : Any, 
+    **kwargs : Any
+) -> Element:
     '''
     Apply ``op`` to every occurrence of ``loc`` in ``element``.
+
+    Note: Calls to ``op`` have the following form:
+    ``op(loc, *args, **kwargs)``
 
     :param ``element``: Target element for transformation.
     :param ``op``: Operation for altering ``element``.
@@ -116,7 +128,7 @@ def transform(element, op, loc, *args, **kwargs):
                 return EmptyElement()
             
             
-def add(element, addition):
+def add(element : ElementNode, addition : ElementNode):
     '''Add ``addition`` to ``element`` and return result.'''
 
     # Should add addition to element and return result
@@ -148,13 +160,13 @@ def add(element, addition):
     return output
 
 
-def remove(element):
+def remove(element : ElementNode):
     '''Remove ``element``.'''
     
     return EmptyElement()
 
 
-def replace(element, replacement):
+def replace(element : ElementNode, replacement : ElementNode):
     '''Replace ``element`` with ``replacement``.'''
     
     if (
