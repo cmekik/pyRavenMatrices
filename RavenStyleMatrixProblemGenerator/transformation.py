@@ -1,3 +1,29 @@
+'''
+This module provides tools for implementing figure transformations.
+
+Transformations vs. Modifiers
+-----------------------------
+
+There are, so to speak, two levels at which we can talk about *figure 
+transformations* and it is worth explicitly disambiguating them. 
+*Transformations* as understood in the Raven's Matrices specification, are 
+patterns that define how figures differ between matrix rows and columns. 
+*Modifiers* (`element_modifier` in syntax) are specific to the representational 
+scheme used in this package and serve to define one figural element in terms of 
+other more basic elements.
+
+The key difference between transformations and modifiers is that 
+**transformations alter the structure of elements**, whereas **modifiers alter 
+the way an element is drawn**. Thus, transformations are a higher level concept 
+in this scheme than modifiers: transformations may add modifiers to or remove 
+modifiers from figures in addition to having other effects such as addition of 
+elements to or removal of elements from figures.
+
+Strictly speaking, transformations are not part of the description of a figure, 
+thus they are not defined in this module.
+
+'''
+
 import copy
 from element import (
     ElementModifier, 

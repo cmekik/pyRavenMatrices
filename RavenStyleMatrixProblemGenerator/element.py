@@ -23,27 +23,6 @@ element ::= basic_element | modified_element | composite_element
 modified_element ::= element modifier_sequence
 composite_element ::= element element {element}  
 modifier_sequence :: element_modifier {element_modifier}
-
-Transformations vs. Modifiers
------------------------------
-
-There are, so to speak, two levels at which we can talk about *figure 
-transformations* and it is worth explicitly disambiguating them. 
-*Transformations* as understood in the Raven's Matrices specification, are 
-patterns that define how figures differ between matrix rows and columns. 
-*Modifiers* (`element_modifier` in syntax) are specific to the representational 
-scheme used in this package and serve to define one figural element in terms of 
-other more basic elements.
-
-The key difference between transformations and modifiers is that 
-**transformations alter the structure of elements**, whereas **modifiers alter 
-the way an element is drawn**. Thus, transformations are a higher level concept 
-in this scheme than modifiers: transformations may add modifiers to or remove 
-modifiers from figures in addition to having other effects such as addition of 
-elements to or removal of elements from figures.
-
-Strictly speaking, transformations are not part of the description of a figure, 
-thus they are not defined in this module.
 '''
 
 
@@ -53,6 +32,7 @@ import cairo
 
 
 class ElementNode(abc.ABC):
+    '''Represents a generic node in element structure syntax.'''
 
     def __repr__(self):
 
