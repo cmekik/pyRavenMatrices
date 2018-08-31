@@ -21,15 +21,16 @@ elements to or removal of elements from figures.
 '''
 
 import copy
-from typing import Callable, Any
-from element import (
+from typing import Callable, Any, List, cast
+from RavenStyleMatrixProblems.element import (
     ElementNode,
     Element,
     ElementModifier, 
     BasicElement, 
     EmptyElement, 
     ModifiedElement, 
-    CompositeElement
+    CompositeElement,
+    get_subtrees
 )
 
 
@@ -57,19 +58,19 @@ class Transformation(object):
         '''Transform ``element``.'''
         
         output = copy.deepcopy(element)
-        for condition, action in self.args:
+        for condition, action in self.pairs:
             if condition in get_subtrees(element):
                 output = transform(output, *action)
         return output
 
 
 def transform(
-    element : Element, 
-    op : Callable[..., Element], 
+    element : ElementNode, 
+    op : Callable[..., ElementNode], 
     loc : ElementNode, 
     *args : Any, 
     **kwargs : Any
-) -> Element:
+) -> ElementNode:
     '''
     Apply ``op`` to every occurrence of ``loc`` in ``element``.
 
@@ -95,10 +96,10 @@ def transform(
             return element
         
         elif isinstance(element, ModifiedElement):
-            new_subelt = transform(op, element.element, loc, *args, **kwargs)
+            new_subelt = transform(element.element, op, loc, *args, **kwargs)
             new_mods = [
                 tfd for tfd in (
-                    transform(op, mod, loc, *args, **kwargs) for mod in 
+                    transform(mod, op, loc, *args, **kwargs) for mod in 
                     element.modifiers
                 ) if tfd
             ]
@@ -112,7 +113,7 @@ def transform(
         elif isinstance(element, CompositeElement):
             new_elts = [
                 elt for elt in (
-                    transform(op, elt, loc, *args, **kwargs) for elt in 
+                    transform(elt, op, loc, *args, **kwargs) for elt in 
                     element.elements
                 ) if elt
             ]

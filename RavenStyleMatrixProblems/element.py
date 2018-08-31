@@ -29,14 +29,14 @@ modifier_sequence :: element_modifier {element_modifier}
 import abc
 from typing import Callable, List, Any, Union
 import cairo
-
+from RavenStyleMatrixProblems.matrix import CellStructure 
 
 class ElementNode(abc.ABC):
     '''Represents a generic node in element structure syntax.'''
 
     def __repr__(self):
 
-        return ''.join(repr(type(self)), '(', repr(vars(self)), ')')
+        return ''.join([type(self).__name__, '(', repr(vars(self)), ')'])
 
     def __eq__(self, other : Any) -> bool:
         '''Return ``True`` if ``other`` is equal to ``self``.
@@ -60,7 +60,9 @@ class Element(ElementNode):
     '''
 
     @abc.abstractmethod
-    def draw_in_context(self, ctx : cairo.Context) -> None:
+    def draw_in_context(
+        self, ctx : cairo.Context, cell_structure : CellStructure
+    ) -> None:
         '''Draw self in the given context.
 
         :param ctx: The context in which self will be drawn.
@@ -74,8 +76,8 @@ class ElementModifier(ElementNode):
     
     @abc.abstractmethod
     def __call__(
-        self, element : Callable[[cairo.Context], None]
-    ) -> Callable[[cairo.Context], None]:
+        self, element : Callable[[cairo.Context, CellStructure], None]
+    ) -> Callable[[cairo.Context, CellStructure], None]:
         '''Modify ``element.draw_in_context`` and return result.
         
         Should return a wrapper of ``element.draw_in_context`` implementing the 
@@ -104,7 +106,9 @@ class EmptyElement(BasicElement):
         
         return False
     
-    def draw_in_context(self, ctx):
+    def draw_in_context(
+        self, ctx : cairo.Context, cell_structure : CellStructure
+    ) -> None:
         pass
     
     
@@ -123,14 +127,16 @@ class ModifiedElement(Element):
         self.modifiers = [modifier]
         self.modifiers.extend(modifiers)
     
-    def draw_in_context(self, ctx : cairo.Context):
+    def draw_in_context(
+        self, ctx : cairo.Context, cell_structure : CellStructure
+    ) -> None:
         
-        modified : Callable[[cairo.Context], None] = (
+        modified : Callable[[cairo.Context, CellStructure], None] = (
             self.element.draw_in_context
         )
         for modifier in self.modifiers:
             modified = modifier(modified)
-        modified(ctx)
+        modified(ctx, cell_structure)
 
     
 class CompositeElement(Element):
@@ -143,7 +149,31 @@ class CompositeElement(Element):
         self.elements = [element_1, element_2]
         self.elements.extend(elements)
         
-    def draw_in_context(self, ctx : cairo.Context) -> None:
+    def draw_in_context(
+        self, ctx : cairo.Context, cell_structure : CellStructure
+    ) -> None:
 
         for element in self.elements:
-            element.draw_in_context(ctx)
+            element.draw_in_context(ctx, cell_structure)
+
+    
+def get_subtrees(element : Element) -> List[Union[Element, ElementModifier]]:
+    '''Return a list of all unique subelements of element.'''
+    
+    output : List[Union[Element, ElementModifier]] = [element]
+    for sub in output:
+        if isinstance(sub, BasicElement) or isinstance(sub, ElementModifier):
+            continue
+        elif isinstance(sub, ModifiedElement):
+            if not sub.element in output:
+                output.append(sub.element)
+            for mod in sub.modifiers:
+                if not mod in output:
+                    output.append(mod)
+        elif isinstance(sub, CompositeElement):
+            for subsub in sub.elements:
+                if not subsub in output:
+                    output.append(subsub)
+        else:
+            raise TypeError('Unexpected type {}'.format(str(type(sub))))
+    return output
