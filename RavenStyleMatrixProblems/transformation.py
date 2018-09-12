@@ -88,42 +88,47 @@ def transform(
 
     if element == loc: # apply op; return result.
     
-        return op(element, *args, **kwargs)
+        ret = op(element, *args, **kwargs)
     
     else: # propagate to subelements (if any) and return result
         
         if isinstance(element, (BasicElement, ElementModifier)):
-            return element
-        
+            ret = element
+
         elif isinstance(element, ModifiedElement):
             new_subelt = transform(element.element, op, loc, *args, **kwargs)
-            new_mods = [
-                tfd for tfd in (
-                    transform(mod, op, loc, *args, **kwargs) for mod in 
-                    element.modifiers
-                ) if tfd
-            ]
-            if new_subelt and new_mods:
-                return ModifiedElement(new_subelt, *new_mods)
-            elif new_subelt and not new_mods:
-                return new_subelt
+            if new_subelt and isinstance(new_subelt, Element):
+                new_mods = [
+                    tfd for tfd in (
+                        transform(mod, op, loc, *args, **kwargs) for mod in 
+                        element.modifiers
+                    ) if isinstance(tfd, ElementModifier)
+                ]
+                if new_mods:
+                    ret = ModifiedElement(new_subelt, *new_mods)
+                else:
+                    ret = new_subelt
             else:
-                return EmptyElement()
+                ret = EmptyElement()
             
         elif isinstance(element, CompositeElement):
             new_elts = [
                 elt for elt in (
                     transform(elt, op, loc, *args, **kwargs) for elt in 
                     element.elements
-                ) if elt
+                ) if (
+                    isinstance(elt, Element) and 
+                    not isinstance(elt, EmptyElement)
+                )
             ]
             if len(new_elts) > 1:
-                return CompositeElement(*new_elts)
+                ret = CompositeElement(*new_elts)
             elif len(new_elts) == 1:
-                return new_elts.pop()
+                ret = new_elts.pop()
             else:
-                return EmptyElement()
-            
+                ret = EmptyElement()
+
+    return ret
             
 def add(element : ElementNode, addition : ElementNode):
     '''Add ``addition`` to ``element`` and return result.'''

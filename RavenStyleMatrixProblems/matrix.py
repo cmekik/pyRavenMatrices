@@ -25,13 +25,15 @@ class MatrixStructure(object):
     '''
 
     def __init__(
-        self, 
+        self,
+        name : str, 
         cell_height : int,
         cell_width : int,
         size : int = 3, 
         num_alternatives : int = 8, 
     ) -> None:
 
+        self.name = name
         self.size = size
         self.num_alternatives = num_alternatives
         self.cell_height = cell_height

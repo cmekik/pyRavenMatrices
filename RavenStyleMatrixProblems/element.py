@@ -27,7 +27,7 @@ modifier_sequence :: element_modifier {element_modifier}
 
 
 import abc
-from typing import Callable, List, Any, Union
+from typing import Callable, Dict, List, Any, Union
 import cairo
 from RavenStyleMatrixProblems.matrix import CellStructure 
 
@@ -74,30 +74,80 @@ class ElementModifier(ElementNode):
     '''Represents an alteration of the drawing procedure for a given element.
     '''
     
-    @abc.abstractmethod
     def __call__(
-        self, element : Callable[[cairo.Context, CellStructure], None]
+        self, routine : Callable[[cairo.Context, CellStructure], None]
     ) -> Callable[[cairo.Context, CellStructure], None]:
-        '''Modify ``element.draw_in_context`` and return result.
+        '''Decorate ``routine`` and return result.
         
         Should return a wrapper of ``element.draw_in_context`` implementing the 
         desired modification.
 
-        :param element: An element whose draw routine is to be modified by self.
+        :param routine: An element drawing routine is to be modified by self.
         '''
-        pass
+        
+        return self.decorator(routine, **self.params)
+
+    @property
+    def decorator(
+        self
+    ) -> Callable[..., Callable[[cairo.Context, CellStructure], None]]:
+        '''Decorates drawing routines given as input to ``self``.'''
+
+        return self._decorator
+
+    @decorator.setter
+    def decorator(
+        self, 
+        val : Callable[..., Callable[[cairo.Context, CellStructure], None]]
+    ) -> None:
+        
+        self._decorator = val
+
+    @property
+    def params(self) -> Dict[str, Any]:
+        '''Params for ``self.decorator``.'''
+
+        return self._params
+
+    @params.setter
+    def params(self, val : Dict[str, Any]) -> None:
+
+        self._params = val
 
 
 class BasicElement(Element):
-    '''An unanalyzed figural unit.
+    '''Represents an unanalyzed figural unit.'''
     
-    ``BasicElement`` is an abstract base class. It cannot be directly 
-    instantiated. 
-    '''
-    pass
+    def draw_in_context(
+        self, ctx : cairo.Context, cell_structure : CellStructure 
+    ) -> None:
+
+        self.routine(ctx, cell_structure, **self.params)
+
+    @property
+    def routine(self) -> Callable[..., None]:
+        '''Drawing routine bound to ``self``.'''
+
+        return self._routine
+
+    @routine.setter
+    def routine(self, val : Callable[..., None]) -> None:
+        
+        self._routine = val
+
+    @property
+    def params(self) -> Dict[str, Any]:
+        '''Params for ``self.routine``.'''
+
+        return self._params
+
+    @params.setter
+    def params(self, val : Dict[str, Any]) -> None:
+
+        self._params = val
 
 
-class EmptyElement(BasicElement):
+class EmptyElement(Element):
     '''Represents an empty element.
     '''
 
