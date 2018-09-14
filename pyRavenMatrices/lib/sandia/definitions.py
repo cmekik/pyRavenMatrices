@@ -146,8 +146,9 @@ def scale(element, factor=.5):
     def wrapped(ctx, cell_structure, *args, **kwargs):
 
         ctx.save()
+        ctx.translate(cell_structure.width / 2., cell_structure.height / 2.)
         ctx.scale(factor, factor)
-        ctx.translate(cell_structure.width/2., cell_structure.height/2.)
+        ctx.translate(- cell_structure.width / 2., - cell_structure.height / 2.)    
         element(ctx, cell_structure, *args, **kwargs)
         ctx.restore()
 
