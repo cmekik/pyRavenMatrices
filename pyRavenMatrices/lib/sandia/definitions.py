@@ -6,8 +6,8 @@
 import math
 import cairo
 import os
-import RavenStyleMatrixProblems.matrix as mat
-import RavenStyleMatrixProblems.element as elt
+import pyRavenMatrices.matrix as mat
+import pyRavenMatrices.element as elt
 
 
 ##############

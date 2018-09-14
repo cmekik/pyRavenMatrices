@@ -29,7 +29,7 @@ modifier_sequence :: element_modifier {element_modifier}
 import abc
 from typing import Callable, Dict, List, Any, Union
 import cairo
-from RavenStyleMatrixProblems.matrix import CellStructure 
+from pyRavenMatrices.matrix import CellStructure 
 
 class ElementNode(abc.ABC):
     '''Represents a generic node in element structure syntax.'''

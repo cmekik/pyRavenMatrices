@@ -22,7 +22,7 @@ elements to or removal of elements from figures.
 
 import copy
 from typing import Callable, Any, List, cast
-from RavenStyleMatrixProblems.element import (
+from pyRavenMatrices.element import (
     ElementNode,
     Element,
     ElementModifier, 
