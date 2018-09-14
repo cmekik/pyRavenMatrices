@@ -4,7 +4,7 @@ with open("readme.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="RavenStyleMatrixProblems",
+    name="pyRavenMatrices",
     version="0.1.0",
     author="Can Serif Mekik",
     author_email="can.mekik@gmail.com",

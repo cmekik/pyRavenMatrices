@@ -1,4 +1,4 @@
-# RavenStyleMatrixProblems
+# pyRavenMatrices
 
 *Raven's Progressive Matrices* are a family of intelligence tests. They are 
 notable for having a simple visual multiple-choice format and are considered 
