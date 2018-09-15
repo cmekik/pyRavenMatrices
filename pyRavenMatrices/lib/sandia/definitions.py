@@ -1,13 +1,22 @@
-#############
-### SETUP ###
-#############
-
-
 import math
 import cairo
 import os
+import typing as t
 import pyRavenMatrices.matrix as mat
 import pyRavenMatrices.element as elt
+
+
+#################
+### UTILITIES ###
+#################
+
+
+def _get_dims(cell_structure: mat.CellStructure) -> t.Tuple[int, int]:
+
+    width = cell_structure.width - (2 * cell_structure.horizontal_margin)
+    height = cell_structure.height - (2 * cell_structure.vertical_margin)
+
+    return width, height
 
 
 ##############
@@ -15,12 +24,24 @@ import pyRavenMatrices.element as elt
 ##############
 
 
-def oval(ctx, cell_structure, tallness = 2, slack=.9):
+def ellipse(
+    ctx: cairo.Context, cell_structure: mat.CellStructure, tallness: int = 2
+) -> None:
+    """
+    Draw an ellipse in the given context.
+
+    Drawing is centered relative to cell structure, and semi-major is aligned 
+    with vertical coordinate axis.
+
+    :param ctx: Current context.
+    :param cell_structure: Assumptions about structure of the cell being drawn.
+    :param tallness: Semi-major over semi-minor, must be > 1.
+    """
     
     if not 1 < tallness:        
         raise ValueError()
-    width = cell_structure.width * slack
-    height = cell_structure.height * slack
+
+    width, height = _get_dims(cell_structure)
     
     ctx.save()
     ctx.translate(cell_structure.width / 2., cell_structure.height / 2.)
@@ -30,13 +51,21 @@ def oval(ctx, cell_structure, tallness = 2, slack=.9):
     ctx.restore()
 
 
-def triangle(ctx, cell_structure, wideness=1, tallness=1, slack=.9):
+def triangle(ctx, cell_structure, wideness=1, tallness=1):
+    """
+    Draw a triangle in the given context.
+
+    Drawing is centered relative to cell structure.
+
+    :param ctx: Current context.
+    :param cell_structure: Assumptions about structure of the cell being drawn.
+    :param tallness: Semi-major over semi-minor, must be > 1.
+    """
     
     if not (wideness >= 1 and tallness >= 1):        
         raise ValueError()
         
-    width = cell_structure.width * slack
-    height = cell_structure.height * slack
+    width, height = _get_dims(cell_structure)
     
     div = max(tallness, wideness)
     
@@ -51,14 +80,13 @@ def triangle(ctx, cell_structure, wideness=1, tallness=1, slack=.9):
     ctx.restore()
 
 
-def rectangle(ctx, cell_structure, tallness = 2, slack=.9):
+def rectangle(ctx, cell_structure, tallness = 2):
     
     if not tallness > 1:
         raise ValueError()
     
-    width = cell_structure.width * slack
-    height = cell_structure.height * slack
-    
+    width, height = _get_dims(cell_structure)
+
     ctx.save()
     ctx.translate(cell_structure.width / 2., cell_structure.height / 2.)
     ctx.scale(1/tallness, 1)
@@ -71,12 +99,12 @@ def rectangle(ctx, cell_structure, tallness = 2, slack=.9):
     ctx.restore()
 
 
-def trapezoid(ctx, cell_structure, wideness=2, tallness=1, slack=.9):
+def trapezoid(ctx, cell_structure, wideness=2, tallness=1):
     
     if not (1 <= tallness and 1 <= wideness):        
         raise ValueError()
-    width = cell_structure.width * slack
-    height = cell_structure.height * slack
+
+    width, height = _get_dims(cell_structure)
     
     div = max(tallness, wideness)
     
@@ -92,12 +120,12 @@ def trapezoid(ctx, cell_structure, wideness=2, tallness=1, slack=.9):
     ctx.restore()
 
 
-def diamond(ctx, cell_structure, tallness=1, slack=.9):
+def diamond(ctx, cell_structure, tallness=1):
     
     if not 1 <= tallness:        
         raise ValueError()
-    width = cell_structure.width * slack
-    height = cell_structure.height * slack
+ 
+    width, height = _get_dims(cell_structure)
     
     ctx.save()
     ctx.translate(cell_structure.width / 2., cell_structure.height / 2.)
@@ -111,12 +139,12 @@ def diamond(ctx, cell_structure, tallness=1, slack=.9):
     ctx.restore()
 
 
-def tee(ctx, cell_structure, wideness=1, tallness=1, slack=.9):
+def tee(ctx, cell_structure, wideness=1, tallness=1):
     
     if not (1 <= tallness and 1 <= wideness):        
         raise ValueError()
-    width = cell_structure.width * slack
-    height = cell_structure.height * slack
+
+    width, height = _get_dims(cell_structure)
     
     div = max(tallness, wideness)
     
