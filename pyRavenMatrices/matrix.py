@@ -32,7 +32,8 @@ class CellStructure(object):
         self.id = cell_id
         self.width = width
         self.height = height
-        self.margin = margin
+        self.horizontal_margin = horizontal_margin
+        self.vertical_margin = vertical_margin
 
 
 class MatrixStructure(object):
