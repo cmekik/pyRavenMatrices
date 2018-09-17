@@ -1,8 +1,10 @@
 import cairo
+import typing as t
 import numpy.random as rd
+import copy
 import math
 from pyRavenMatrices.element import (
-    BasicElement, ElementModifier, ModifiedElement, CompositeElement
+    Element, BasicElement, ElementModifier, ModifiedElement, CompositeElement
 ) 
 from pyRavenMatrices.lib.sandia.definitions import (
     ellipse, rectangle, diamond, triangle, trapezoid, tee,
@@ -66,38 +68,38 @@ class StructureGenerator(object):
         return element
 
 
-class ShapeGenerator(object):
+class RoutineGenerator(object):
     
     def __init__(
         self,
-        shapes: dict = None,
-        ellipse: dict = None, 
-        triangle: dict = None,
-        rectangle: dict = None,
-        diamond: dict = None,
-        trapezoid: dict = None,
-        tee: dict = None
+        routines: dict = None,
+        ellipse_params: dict = None, 
+        triangle_params: dict = None,
+        rectangle_params: dict = None,
+        diamond_params: dict = None,
+        trapezoid_params: dict = None,
+        tee_params: dict = None
     ) -> None:
 
-        if shapes == None:
-            shapes = {
-                'ellipse': 1 / 6,
-                'triangle': 1 / 6,
-                'rectangle': 1 / 6,
-                'diamond': 1 / 6,
-                'trapezoid': 1 / 6,
-                'tee': 1 / 6
+        if routines == None:
+            routines = {
+                ellipse: 1 / 6,
+                triangle: 1 / 6,
+                rectangle: 1 / 6,
+                diamond: 1 / 6,
+                trapezoid: 1 / 6,
+                tee: 1 / 6
             }
-        if ellipse == None:  
-            ellipse = {
+        if ellipse_params == None:  
+            ellipse_params = {
                 'r': {
                     2: 1 / 3,
                     4: 1 / 3,
                     8: 1 / 3
                 }
             }
-        if triangle == None:
-            triangle = {
+        if triangle_params == None:
+            triangle_params = {
                 'r': {
                     .25: .2,
                     .5: .2,
@@ -106,16 +108,16 @@ class ShapeGenerator(object):
                     4: .2
                 }
             }
-        if rectangle == None:
-            rectangle = {
+        if rectangle_params == None:
+            rectangle_params = {
                 'r': {
                     2: 1 / 3,
                     4: 1 / 3,
                     8: 1 / 3,
                 }
             }
-        if trapezoid == None:
-            trapezoid = {
+        if trapezoid_params == None:
+            trapezoid_params = {
                 'r': {
                     .25: .2,
                     .5: .2,
@@ -124,16 +126,16 @@ class ShapeGenerator(object):
                     4: .2
                 }
             }
-        if diamond == None:
-            diamond = {
+        if diamond_params == None:
+            diamond_params = {
                 'r': {
                     1: 1 / 3,
                     2: 1 / 3,
                     4: 1 / 3,
                 }
             }
-        if tee == None:
-            tee = {
+        if tee_params == None:
+            tee_params = {
                 'r': {
                     .25: .2,
                     .5: .2,
@@ -143,43 +145,45 @@ class ShapeGenerator(object):
                 }
             }
 
-        self.shapes = shapes
-        self.ellipse = ellipse
-        self.triangle = triangle
-        self.rectangle = rectangle
-        self.trapezoid = trapezoid
-        self.diamond = diamond
-        self.tee = tee
+        self.routines: dict = t.cast(dict, routines)
+        self.params = {
+            ellipse: t.cast(dict, ellipse_params),
+            triangle: t.cast(dict, triangle_params),
+            rectangle: t.cast(dict, rectangle_params),
+            trapezoid: t.cast(dict, trapezoid_params),
+            diamond: t.cast(dict, diamond_params),
+            tee: t.cast(dict, tee_params)
+        }
 
-    def sample(self):
+    def sample(self, size=1, dist=None, replace=True):
         
-        shape = rd.choice(list(self.shapes.keys()), p=list(self.shapes.values()))
+        if dist == None:
+            dist = self.routines
+
+        decorators = rd.choice(
+            list(dist.keys()), p=list(dist.values()), replace=replace
+        )
         
-        if shape == 'ellipse':
-            routine, params = ellipse, self.sample_params(self.ellipse)
-        elif shape == 'triangle':
-            routine, params = triangle, self.sample_params(self.triangle)
-        elif shape == 'rectangle':
-            routine, params = rectangle, self.sample_params(self.rectangle)
-        elif shape == 'diamond':
-            routine, params = diamond, self.sample_params(self.diamond)
-        elif shape == 'trapezoid':
-            routine, params = trapezoid, self.sample_params(self.trapezoid)
-        else: # shape == 'tee'
-            routine, params = tee, self.sample_params(self.tee)
-        return routine, params
-        
-    @staticmethod
-    def sample_params(dists):
+        return decorators
+
+    def sample_params(self, routine=None, size=1, dists=None, replace=True):
+
+        if dists == None:
+            dists = self.params[routine]
         
         params = {
             param: rd.choice(
-                list(dists[param].keys()), 
-                p=list(dists[param].values())
-            )
-            
-            for param in dists
+                list(dists[param].keys()),
+                size=size,
+                p=list(dists[param].values()),
+                replace=replace
+            ) for param in dists
         }
+
+        params = [
+            {param: params[param][i] for param in params} for i in range(size)
+        ]
+
         return params
 
 
@@ -188,33 +192,29 @@ class DecoratorGenerator(object):
     def __init__(
         self,
         decorators: dict = None,
-        scale: dict = None,
-        rotation: dict = None,
-        shading: dict = None,
-        numerosity: dict = None
+        scale_params: dict = None,
+        rotation_params: dict = None,
+        shading_params: dict = None,
+        numerosity_params: dict = None
     ) -> None:
 
         if decorators == None:
             decorators = {
-                'scale': .25,
-                'rotation': .25,
-                'shading': .25,
-                'numerosity': .25
+                scale: .25,
+                rotation: .25,
+                shading: .25,
+                numerosity: .25
             }        
-        if scale == None:
-            scale = {
+        if scale_params == None:
+            scale_params = {
                 'factor': {
-                    (7 / 8): 1 / 7,
-                    (6 / 8): 1 / 7,
-                    (5 / 8): 1 / 7,
-                    (4 / 8): 1 / 7,
-                    (3 / 8): 1 / 7,
-                    (2 / 8): 1 / 7,
-                    (1 / 8): 1 / 7
+                    (3 / 4): 1 / 3,
+                    (2 / 4): 1 / 3,
+                    (1 / 4): 1 / 3,
                 } 
             }        
-        if rotation == None:
-            rotation = {
+        if rotation_params == None:
+            rotation_params = {
                 'angle': {
                     (1 / 8) * 2 * math.pi: 1 / 7,
                     (2 / 8) * 2 * math.pi: 1 / 7,
@@ -225,8 +225,8 @@ class DecoratorGenerator(object):
                     (7 / 8) * 2 * math.pi: 1 / 7
                 }
             }        
-        if shading == None:
-            shading = {
+        if shading_params == None:
+            shading_params = {
                 'lightness': {
                     (7 / 8): 1 / 7,
                     (6 / 8): 1 / 7,
@@ -237,8 +237,8 @@ class DecoratorGenerator(object):
                     (1 / 8): 1 / 7            
                 }
             }        
-        if numerosity == None:
-            numerosity = {
+        if numerosity_params == None:
+            numerosity_params = {
                 'number': {
                     2: 1 / 7,
                     3: 1 / 7,
@@ -250,38 +250,122 @@ class DecoratorGenerator(object):
                 }
             }
 
-        self.decorators = decorators
-        self.scale = scale
-        self.rotation = rotation
-        self.shading = shading
-        self.numerosity = numerosity
+        self.decorators: dict = t.cast(dict, decorators)
+        self.params = {
+            scale: t.cast(dict, scale_params),
+            rotation: t.cast(dict, rotation_params),
+            shading: t.cast(dict, shading_params),
+            numerosity: t.cast(dict, numerosity_params)
+        }
     
-    def sample(self):
+    def sample(self, size=1, dist=None, replace=True):
         
-        decorator = rd.choice(
-            list(self.decorators.keys()), p=list(self.decorators.values())
+        if dist == None:
+            dist = self.decorators
+
+        decorators = rd.choice(
+            list(dist.keys()), p=list(dist.values()), replace=replace
         )
         
-        if decorator == 'scale':
-            decorator, params = scale, self.sample_params(self.scale)
-        elif decorator == 'rotation':
-            decorator, params = rotation, self.sample_params(self.rotation)
-        elif decorator == 'shading':
-            decorator, params = shading, self.sample_params(self.shading)
-        else: # decorator == 'numerosity'
-            decorator, params = numerosity, self.sample_params(self.numerosity)
+        return decorators
         
-        return decorator, params
-        
-    @staticmethod
-    def sample_params(dists):
+    def sample_params(self, decorator=None, size=1, dists=None, replace=True):
+
+        if dists == None:
+            dists = self.params[decorator]
         
         params = {
             param: rd.choice(
-                list(dists[param].keys()), 
-                p=list(dists[param].values())
-            )
-            
-            for param in dists
+                list(dists[param].keys()),
+                size=size,
+                p=list(dists[param].values()),
+                replace=replace
+            ) for param in dists
         }
+
+        params = [
+            {param: params[param][i] for param in params} for i in range(size)
+        ]
+        if len(params) == 1:
+            params = params.pop()
+
         return params
+
+
+def is_non_composite(element):
+    
+    return isinstance(element, (BasicElement, ModifiedElement))
+
+
+def get_noncomposite_elements(element):
+    
+    output = [element]
+    for sub in output:
+        if isinstance(sub, BasicElement) or isinstance(sub, ElementModifier):
+            continue
+        elif isinstance(sub, ModifiedElement):
+            output.append(sub.element)
+            for mod in sub.modifiers:
+                output.append(mod)
+        elif isinstance(sub, CompositeElement):
+            for subsub in sub.elements:
+                output.append(subsub)
+        else:
+            raise TypeError('Unexpected type {}'.format(str(type(sub))))
+    output = list(filter(is_non_composite, output))    
+    return output
+
+
+def generate_sandia_figure(
+    structure_generator: StructureGenerator, 
+    routine_generator: RoutineGenerator, 
+    decorator_generator: DecoratorGenerator,
+) -> Element:
+    
+    restr_rot_params = {
+        'angle': {
+            k: v 
+            for k, v in decorator_generator.params[rotation]['angle'].items()
+            if v < math.pi 
+        }
+    }
+    normalizing_ct = sum(restr_rot_params.values())
+    restr_rot_params['angle'] = {
+        k: v / normalizing_ct for k, v in restr_rot_params['angle'].items()
+    } 
+
+    element = structure_generator.sample()
+    noncomposite_elements = get_noncomposite_elements(element)
+    
+    for e in noncomposite_elements:
+        if isinstance(e, BasicElement):
+            routine, params = routine_generator.sample()
+            e.routine = routine
+            e.params = params
+            
+    for e in noncomposite_elements:
+        if isinstance(e, ModifiedElement):
+           
+            decorators = decorator_generator.sample(
+                size=len(e.modifiers), replace=False
+            )  
+            # Move numerosity element to the end, if present
+            if numerosity in decorators:
+                idx = decorators.get_index(numerosity)
+                decorators.insert(-1, decorators.pop(idx))
+
+            for modifier, decorator in zip(e.modifiers, decorators):
+                modifier.decorator = decorator
+                if (
+                    e.element in [ellipse, rectangle] and
+                    decorator == rotation
+                ):
+                    modifier.params = decorator_generator.sample_params(
+                        dists = restr_rot_params
+                    )
+                else:
+                    modifier.params = decorator_generator.sample_params(
+                        decorator
+                    )
+
+    return element
