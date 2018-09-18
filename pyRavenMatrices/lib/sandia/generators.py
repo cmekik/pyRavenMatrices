@@ -160,11 +160,11 @@ class RoutineGenerator(object):
         if dist == None:
             dist = self.routines
 
-        decorators = rd.choice(
-            list(dist.keys()), p=list(dist.values()), replace=replace
+        routine = rd.choice(
+            list(dist.keys()), size=size, p=list(dist.values()), replace=replace
         )
         
-        return decorators
+        return list(routine)
 
     def sample_params(self, routine=None, size=1, dists=None, replace=True):
 
@@ -264,10 +264,10 @@ class DecoratorGenerator(object):
             dist = self.decorators
 
         decorators = rd.choice(
-            list(dist.keys()), p=list(dist.values()), replace=replace
+            list(dist.keys()), size=size, p=list(dist.values()), replace=replace
         )
         
-        return decorators
+        return list(decorators)
         
     def sample_params(self, decorator=None, size=1, dists=None, replace=True):
 
@@ -286,8 +286,6 @@ class DecoratorGenerator(object):
         params = [
             {param: params[param][i] for param in params} for i in range(size)
         ]
-        if len(params) == 1:
-            params = params.pop()
 
         return params
 
@@ -329,7 +327,7 @@ def generate_sandia_figure(
             if v < math.pi 
         }
     }
-    normalizing_ct = sum(restr_rot_params.values())
+    normalizing_ct = sum(restr_rot_params['angle'].values())
     restr_rot_params['angle'] = {
         k: v / normalizing_ct for k, v in restr_rot_params['angle'].items()
     } 
@@ -339,9 +337,8 @@ def generate_sandia_figure(
     
     for e in noncomposite_elements:
         if isinstance(e, BasicElement):
-            routine, params = routine_generator.sample()
-            e.routine = routine
-            e.params = params
+            e.routine = routine_generator.sample().pop()
+            e.params = routine_generator.sample_params(e.routine).pop()
             
     for e in noncomposite_elements:
         if isinstance(e, ModifiedElement):
@@ -351,8 +348,9 @@ def generate_sandia_figure(
             )  
             # Move numerosity element to the end, if present
             if numerosity in decorators:
-                idx = decorators.get_index(numerosity)
-                decorators.insert(-1, decorators.pop(idx))
+                idx = decorators.index(numerosity)
+                num = decorators.pop(idx)
+                decorators.append(num)
 
             for modifier, decorator in zip(e.modifiers, decorators):
                 modifier.decorator = decorator
@@ -362,10 +360,10 @@ def generate_sandia_figure(
                 ):
                     modifier.params = decorator_generator.sample_params(
                         dists = restr_rot_params
-                    )
+                    ).pop()
                 else:
                     modifier.params = decorator_generator.sample_params(
                         decorator
-                    )
+                    ).pop()
 
     return element
